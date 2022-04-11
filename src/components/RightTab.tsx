@@ -1,19 +1,21 @@
 import { FunctionComponent } from 'react';
 import BaseButton from './BaseButton';
+import ContentTab from './ContentTab';
 
-interface RighTabProps {
+interface RightTabProps {
   /* nodes props etc */
 }
 
-const RighTab: FunctionComponent<RighTabProps> = () => {
+const RightTab: FunctionComponent<RightTabProps> = () => {
   return (
-    <div>
+    <div className="h-full">
       <div>
         <BaseButton onClick={() => {}} text={'Selected node'} />
         <BaseButton onClick={() => {}} text={'General'} />
       </div>
+      <ContentTab/>
     </div>
   );
 };
 
-export default RighTab;
+export default RightTab;
