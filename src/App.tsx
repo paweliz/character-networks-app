@@ -9,31 +9,143 @@ import { GraphContext } from './contexts/GraphContext';
 import { GlobalGraphSettingsContext } from './contexts/SettingsContext';
 import { v4 as uuid } from 'uuid';
 
+interface edgesFromJSON {
+  first: string;
+  second: string;
+  value: number;
+}
+
+const dataFromJSON = JSON.parse(`{"edges": [
+  {
+      "first": "Paweł",
+      "second": "Jacek",
+      "value": 2
+  },
+  {
+      "first": "Paweł",
+      "second": "Wrocław",
+      "value": 1
+  },
+  {
+      "first": "Paweł",
+      "second": "wiejski",
+      "value": 1
+  },
+  {
+      "first": "Paweł",
+      "second": "dworzec główny",
+      "value": 2
+  },
+  {
+      "first": "Paweł",
+      "second": "podkarpacki",
+      "value": 2
+  },
+  {
+      "first": "Jacek",
+      "second": "Wrocław",
+      "value": 3
+  },
+  {
+      "first": "Jacek",
+      "second": "dolnośląski",
+      "value": 1
+  },
+  {
+      "first": "Jacek",
+      "second": "wiejski",
+      "value": 1
+  },
+  {
+      "first": "Wrocław",
+      "second": "dolnośląski",
+      "value": 2
+  },
+  {
+      "first": "dolnośląski",
+      "second": "wiejski",
+      "value": 1
+  },
+  {
+      "first": "wiejski",
+      "second": "dworzec główny",
+      "value": 1
+  },
+  {
+      "first": "dworzec główny",
+      "second": "podkarpacki",
+      "value": 1
+  }
+],
+"id": "cc5aa68a-cd26-4854-8a92-d7cc56917d6f",
+"nodes":[
+  {
+      "id": 1,
+      "title": "nam_liv",
+      "label": "Paweł",
+      "count": 3
+   },
+  {
+      "count": 2,
+      "id": 2,
+      "label": "Jacek",
+      "title": "nam_liv"
+  },
+  {
+      "count": 2,
+      "id": 3,
+      "label": "Wrocław",
+      "title": "nam_loc"
+  },
+  {
+      "count": 1,
+      "id": 4,
+      "label": "dolnośląski",
+      "title": "nam_loc"
+  },
+  {
+      "count": 1,
+      "id": 5,
+      "label": "podkarpacki",
+      "title": "nam_loc"
+  },
+  {
+      "count": 1,
+      "id": 6,
+      "label": "wiejski",
+      "title": "nam_fac"
+  },
+  {
+      "count": 1,
+      "id": 7,
+      "label": "dworzec główny",
+      "title": "nam_fac"
+  }
+]
+}`);
+
+const edgesObj1 = dataFromJSON.edges.map((item: edgesFromJSON) => {
+  return {
+    from: item.first,
+    to: item.second,
+    //value: item.value,
+  };
+});
+
 function App() {
   const [readText, setReadText] = useState<string | ArrayBuffer | null>(null);
-  const [graphId, setGraphId] = useState<string>(uuid())
+  const [graphId, setGraphId] = useState<string>(uuid());
   const [graph, setGraph] = useState<GraphType>({
-    nodes: [
-      { id: 1, label: 'Node 1', title: 'node 1 tootip text', count: 1 },
-      { id: 2, label: 'Node 2', title: 'node 2 tootip text', count: 3  },
-      { id: 3, label: 'Node 3', title: 'node 3 tootip text', count: 5  },
-      { id: 4, label: 'Node 4', title: 'node 4 tootip text', count: 7  },
-      { id: 5, label: 'Node 5', title: 'node 5 tootip text', count: 9  },
-    ],
-    edges: [
-      { from: 1, to: 2 },
-      { from: 1, to: 3 },
-      { from: 2, to: 4 },
-      { from: 2, to: 5 },
-    ],
+    nodes: dataFromJSON.nodes,
+    edges: edgesObj1,
   });
 
-  const [filteredGraph, setFilteredGraph] = useState<GraphType>(graph)
+  const [filteredGraph, setFilteredGraph] = useState<GraphType>(graph);
 
   const [globalSettings, setGlobalSettings] = useState<GlobalGraphSettings>({
     minCountThreshold: 3,
     maxCountThreshold: 5,
-  })
+  });
 
   const options = {
     layout: {
@@ -45,28 +157,29 @@ function App() {
     height: '500px',
   };
 
-  const events = {
-    
-  };
+  const events = {};
 
   useEffect(() => {
     setFilteredGraph({
       ...graph,
       nodes: graph.nodes.filter((node) => {
-        return node.count >= globalSettings.minCountThreshold &&
-          node.count <= globalSettings.maxCountThreshold;
+        return (
+          node.count >= globalSettings.minCountThreshold &&
+          node.count <= globalSettings.maxCountThreshold
+        );
       }),
     });
-    setGraphId(uuid())
+    setGraphId(uuid());
   }, [graph, globalSettings]);
 
   return (
     <GraphContext.Provider value={graph}>
-      <GlobalGraphSettingsContext.Provider value={{
-        settings: globalSettings,
-        updateSettings: setGlobalSettings,
-      }}>
-        <div className="flex justify-center justify-items-center">
+      <GlobalGraphSettingsContext.Provider
+        value={{
+          settings: globalSettings,
+          updateSettings: setGlobalSettings,
+        }}>
+        <div className='flex justify-center justify-items-center'>
           <div className='p-4 flex-none flex-row justify-center items-center justify-items-center w-3/4 m-0'>
             {/* <img src={logo} className='App-logo' alt='logo' />
               <p>
@@ -87,7 +200,10 @@ function App() {
               />
             </div>
             <div className='flex self-center'>
-              <InputComponent inputState={readText} setInputState={setReadText} />
+              <InputComponent
+                inputState={readText}
+                setInputState={setReadText}
+              />
             </div>
             <div className='flex self-center'>
               <Graph
@@ -103,7 +219,7 @@ function App() {
             </div>
           </div>
           <div className='p-4'>
-            <RightTab/>
+            <RightTab />
           </div>
         </div>
       </GlobalGraphSettingsContext.Provider>
