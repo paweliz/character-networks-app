@@ -4,6 +4,7 @@ import React, { FunctionComponent, useContext, useEffect, useState } from "react
 import 'rc-slider/assets/index.css';
 import { GlobalGraphSettingsContext } from "../../contexts/SettingsContext";
 import { GraphContext } from "../../contexts/GraphContext";
+import { GraphRefresherContext } from "../../contexts/GraphRefresherContext";
 
 interface GeneralContentTabProps {
   /* nodes props etc */
@@ -13,8 +14,13 @@ const GeneralContentTab: FunctionComponent<GeneralContentTabProps> = () => {
 
   const { settings, updateSettings } = useContext(GlobalGraphSettingsContext);
   const graph = useContext(GraphContext);
+  const refresh = useContext(GraphRefresherContext);
 
   const [minMaxValuesNodesThreshold, setMinMaxValuesNodesThreshold] = useState({
+    min: 1,
+    max: 100,
+  });
+  const [minMaxDefault, setMinMaxDefault] = useState({
     min: 1,
     max: 100,
   });
@@ -23,7 +29,32 @@ const GeneralContentTab: FunctionComponent<GeneralContentTabProps> = () => {
     min: settings.minCountThreshold,
     max: settings.maxCountThreshold,
   });
-
+  useEffect(() => {
+    fetch('http://localhost:5000/graph/cc5aa68a-cd26-4854-8a92-d7cc56917d5f/settings', {
+      method: 'GET',
+    })
+    .then(response => response.json())
+    .then(data => {
+      setMinMaxValuesNodesThreshold({
+        min: 0,
+        max: data.maxThresholdValue,
+      });
+      setInternalMinMax({
+        min: data.thresholdMin,
+        max: data.thresholdMax,
+      });
+      setMinMaxDefault({
+        min: data.thresholdMin,
+        max: data.thresholdMax,
+      });
+      
+    }).catch(e => {
+     
+    }).finally(() => {
+      
+    });
+  }, [])
+/*
   useEffect(() => {
     if (graph !== null && graph.nodes.length > 0) {
       let min = graph.nodes[0].count;
@@ -56,6 +87,28 @@ const GeneralContentTab: FunctionComponent<GeneralContentTabProps> = () => {
       });
     }
   }, [graph]);
+*/
+  const updateSettingsReq = (value: any) => {
+    if (Array.isArray(value)) {
+      updateSettings({
+        minCountThreshold: value[0] < value[1] ? value[0] : value[1],
+        maxCountThreshold: value[0] > value[1] ? value[0] : value[1], 
+      });
+      console.log(value);
+      fetch('http://localhost:5000/graph/cc5aa68a-cd26-4854-8a92-d7cc56917d5f/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+          thresholdMin: value[0] < value[1] ? value[0] : value[1],
+          thresholdMax: value[0] > value[1] ? value[0] : value[1],
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        refresh();
+      });
+    }
+  };
 
   let marks: any = {}
   marks[minMaxValuesNodesThreshold.min] = minMaxValuesNodesThreshold.min;
@@ -68,7 +121,7 @@ const GeneralContentTab: FunctionComponent<GeneralContentTabProps> = () => {
       <div className="p-2">
         <Slider
           range
-          defaultValue={[settings.minCountThreshold, settings.maxCountThreshold]}
+          defaultValue={[minMaxDefault.min, minMaxDefault.max]}
           min={minMaxValuesNodesThreshold.min}
           max={minMaxValuesNodesThreshold.max}
           marks={marks}
@@ -80,14 +133,7 @@ const GeneralContentTab: FunctionComponent<GeneralContentTabProps> = () => {
               });
             }
           }}
-          onAfterChange={(value) => {
-            if (Array.isArray(value)) {
-              updateSettings({
-                minCountThreshold: value[0] < value[1] ? value[0] : value[1],
-                maxCountThreshold: value[0] > value[1] ? value[0] : value[1], 
-              });
-            }
-          }}
+          onAfterChange={updateSettingsReq}
         />
       </div>
       <div className="mt-4 flex justify-evenly">
