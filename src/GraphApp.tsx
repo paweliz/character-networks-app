@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import './App.css';
+import './GraphApp.css';
 import Graph from 'react-graph-vis';
 import InputComponent from './components/InputComponent';
 import BaseButton from './components/BaseButton';
@@ -9,6 +9,8 @@ import { GraphContext } from './contexts/GraphContext';
 import { GlobalGraphSettingsContext } from './contexts/SettingsContext';
 import { v4 as uuid } from 'uuid';
 import { GraphRefresherContext } from './contexts/GraphRefresherContext';
+import TextProvider from './components/TextProvider';
+import { Modal } from 'react-bootstrap';
 
 interface edgesFromJSON {
   first: string;
@@ -300,7 +302,7 @@ const edgesObj1 = dataFromJSON.edges.map((item: edgesFromJSON) => {
   };
 });
 
-function App() {
+function GraphApp() {
   const [readText, setReadText] = useState<string | ArrayBuffer | null>(null);
   const [refreshValue, setRefreshValue] = useState<boolean>(false);
   const [graphId, setGraphId] = useState<string>(uuid());
@@ -315,6 +317,8 @@ function App() {
     minCountThreshold: 3,
     maxCountThreshold: 5,
   });
+
+	const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   const options = {
     layout: {
@@ -377,7 +381,16 @@ function App() {
           value={{
             settings: globalSettings,
             updateSettings: setGlobalSettings,
-          }}>
+          }}
+				>
+					<Modal show={modalOpen} onHide={() => setModalOpen(false)}>
+						<Modal.Header closeButton>
+          		<Modal.Title>Analyze text</Modal.Title>
+       		 	</Modal.Header>
+						<Modal.Body>
+							<TextProvider/>
+  					</Modal.Body>
+      		</Modal>
           <div className='flex justify-center justify-items-center'>
             <div className='p-4 flex-none flex-row justify-center items-center justify-items-center w-3/4 m-0'>
               {/* <img src={logo} className='App-logo' alt='logo' />
@@ -387,7 +400,7 @@ function App() {
               <div className='flex self-center'>
                 <BaseButton
                   text={'Input text'}
-                  onClick={() => console.log('Input text')}
+                  onClick={() => setModalOpen(true)}
                 />
                 <BaseButton
                   text={'Load text'}
@@ -427,4 +440,4 @@ function App() {
   );
 }
 
-export default App;
+export default GraphApp;
