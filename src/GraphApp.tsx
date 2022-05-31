@@ -11,6 +11,7 @@ import { v4 as uuid } from 'uuid';
 import { GraphRefresherContext } from './contexts/GraphRefresherContext';
 import TextProvider from './components/TextProvider';
 import { Modal } from 'react-bootstrap';
+import { useParams } from 'react-router-dom';
 
 interface edgesFromJSON {
   first: string;
@@ -320,6 +321,8 @@ function GraphApp() {
 
 	const [modalOpen, setModalOpen] = useState<boolean>(false);
 
+	let { id } = useParams();
+
   const options = {
     layout: {
       hierarchical: false,
@@ -338,8 +341,8 @@ function GraphApp() {
 
   useEffect(() => {
     //setFilteredGraph(graph);
-    
-    fetch('http://localhost:5000/graph/cc5aa68a-cd26-4854-8a92-d7cc56917d5f/filtered', {
+    //'http://localhost:5000/graph/cc5aa68a-cd26-4854-8a92-d7cc56917d5f/filtered'
+    fetch(`http://${process.env.REACT_APP_BACKEND_ADDRESS}:${process.env.REACT_APP_BACKEND_PORT}/graph/${id}/filtered`, {
       method: 'GET',
     })
     .then(response => response.json())
