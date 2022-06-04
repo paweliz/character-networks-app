@@ -1,0 +1,19 @@
+.label {
+  @apply font-bold;
+}
+
+.label-data {
+  @apply ml-2;
+}
+
+.record {
+
+}
+
+.record  {
+  
+}
+
+.records > :not(:first-child) {
+  @apply mt-4;
+}

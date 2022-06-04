@@ -5,6 +5,17 @@ import 'rc-slider/assets/index.css';
 import { GlobalGraphSettingsContext } from "../../contexts/SettingsContext";
 import { GraphContext } from "../../contexts/GraphContext";
 import { GraphRefresherContext } from "../../contexts/GraphRefresherContext";
+import { useParams } from "react-router-dom";
+import ControllableList from "../ControlableList/ControllableList";
+
+
+const ListElementRenderer = (props: any) => {
+  return (
+    <div>
+      {props.name}
+    </div>
+  );
+}
 
 interface GeneralContentTabProps {
   /* nodes props etc */
@@ -15,6 +26,7 @@ const GeneralContentTab: FunctionComponent<GeneralContentTabProps> = () => {
   const { settings, updateSettings } = useContext(GlobalGraphSettingsContext);
   const graph = useContext(GraphContext);
   const refresh = useContext(GraphRefresherContext);
+  let { id } = useParams();
 
   const [minMaxValuesNodesThreshold, setMinMaxValuesNodesThreshold] = useState({
     min: 1,
@@ -30,11 +42,12 @@ const GeneralContentTab: FunctionComponent<GeneralContentTabProps> = () => {
     max: settings.maxCountThreshold,
   });
   useEffect(() => {
-    fetch('http://localhost:5000/graph/cc5aa68a-cd26-4854-8a92-d7cc56917d5f/settings', {
+    fetch(`http://${process.env.REACT_APP_BACKEND_ADDRESS}:${process.env.REACT_APP_BACKEND_PORT}/graph/${id}/settings`, {
       method: 'GET',
     })
     .then(response => response.json())
     .then(data => {
+      
       setMinMaxValuesNodesThreshold({
         min: 0,
         max: data.maxThresholdValue,
@@ -105,6 +118,7 @@ const GeneralContentTab: FunctionComponent<GeneralContentTabProps> = () => {
       })
       .then(response => response.json())
       .then(data => {
+        console.log(data)
         refresh();
       });
     }
@@ -114,35 +128,40 @@ const GeneralContentTab: FunctionComponent<GeneralContentTabProps> = () => {
   marks[minMaxValuesNodesThreshold.min] = minMaxValuesNodesThreshold.min;
   marks[minMaxValuesNodesThreshold.max] = minMaxValuesNodesThreshold.max;
   return (
-    <div className="text-base">
-      <div className="text-lg semi-bold">
-        Nodes count thresholds:
-      </div>
-      <div className="p-2">
-        <Slider
-          range
-          defaultValue={[minMaxDefault.min, minMaxDefault.max]}
-          min={minMaxValuesNodesThreshold.min}
-          max={minMaxValuesNodesThreshold.max}
-          marks={marks}
-          onChange={(value) => {
-            if (Array.isArray(value)) {
-              setInternalMinMax({
-                min: value[0] < value[1] ? value[0] : value[1],
-                max: value[0] > value[1] ? value[0] : value[1], 
-              });
-            }
-          }}
-          onAfterChange={updateSettingsReq}
-        />
-      </div>
-      <div className="mt-4 flex justify-evenly">
-        <div>
-          min: {internalMinMax.min}
+    <div>
+      <div className="text-base">
+        <div className="text-lg semi-bold">
+          Nodes count thresholds:
         </div>
-        <div>
-          max: {internalMinMax.max}
+        <div className="p-2">
+          <Slider
+            range
+            defaultValue={[minMaxDefault.min, minMaxDefault.max]}
+            min={minMaxValuesNodesThreshold.min}
+            max={minMaxValuesNodesThreshold.max}
+            marks={marks}
+            onChange={(value) => {
+              if (Array.isArray(value)) {
+                setInternalMinMax({
+                  min: value[0] < value[1] ? value[0] : value[1],
+                  max: value[0] > value[1] ? value[0] : value[1], 
+                });
+              }
+            }}
+            onAfterChange={updateSettingsReq}
+          />
         </div>
+        <div className="mt-4 flex justify-evenly">
+          <div>
+            min: {internalMinMax.min}
+          </div>
+          <div>
+            max: {internalMinMax.max}
+          </div>
+        </div>
+      </div>
+      <div>
+          <ControllableList listArray={[{name: 1}, {name:2}]} elementRenderer={ListElementRenderer}/>
       </div>
     </div>
   );

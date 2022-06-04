@@ -4,7 +4,7 @@ import Graph from 'react-graph-vis';
 import InputComponent from './components/InputComponent';
 import BaseButton from './components/BaseButton';
 import RightTab from './components/RightTab';
-import { GlobalGraphSettings, GraphType } from './types';
+import { AppMode, AppState, GlobalGraphSettings, GraphType } from './types';
 import { GraphContext } from './contexts/GraphContext';
 import { GlobalGraphSettingsContext } from './contexts/SettingsContext';
 import { v4 as uuid } from 'uuid';
@@ -12,6 +12,8 @@ import { GraphRefresherContext } from './contexts/GraphRefresherContext';
 import TextProvider from './components/TextProvider';
 import { Modal } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
+import { AppStateContext, AppStateContextType } from './contexts/AppStateContext';
+import { SelectedNodeContext, SelectedNodeContextType } from './contexts/SelectedNodeContext';
 
 interface edgesFromJSON {
   first: string;
@@ -307,17 +309,18 @@ function GraphApp() {
   const [readText, setReadText] = useState<string | ArrayBuffer | null>(null);
   const [refreshValue, setRefreshValue] = useState<boolean>(false);
   const [graphId, setGraphId] = useState<string>(uuid());
-  const [graph, setGraph] = useState<GraphType>({
+  const [filteredGraph, setFilteredGraph] = useState<GraphType>({
     nodes: dataFromJSON.nodes,
     edges: edgesObj1,
   });
-
-  const [filteredGraph, setFilteredGraph] = useState<GraphType>(graph);
 
   const [globalSettings, setGlobalSettings] = useState<GlobalGraphSettings>({
     minCountThreshold: 3,
     maxCountThreshold: 5,
   });
+
+	const [appState, setAppState] = useState<AppState>({mode: AppMode.normal});
+	const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
 	const [modalOpen, setModalOpen] = useState<boolean>(false);
 
@@ -333,7 +336,14 @@ function GraphApp() {
     height: '500px',
   };
 
-  const events = {};
+  const events = {
+		select: ({nodes}: any) => {
+			if (nodes.length > 0)
+				setSelectedNode(nodes[0]);
+			else
+				setSelectedNode(null);
+		}
+	};
 
   const refresh = () => {
     setRefreshValue(!refreshValue);
@@ -359,10 +369,10 @@ function GraphApp() {
       } else {
         setFilteredGraph(dataFromJSON);
       }
+			setGraphId(uuid());
     }).catch(e => {
       setFilteredGraph(dataFromJSON);
-    }).finally(() => {
-      setGraphId(uuid());
+			setGraphId(uuid());
     });/*
     setFilteredGraph({
       ...graph,
@@ -374,71 +384,67 @@ function GraphApp() {
       }),
     });*/
     setGraphId(uuid());
-  }, [graph, globalSettings, refreshValue]);
+  }, [globalSettings, refreshValue]);
 
 
   return (
     <GraphRefresherContext.Provider value={refresh}>
-      <GraphContext.Provider value={graph}>
         <GlobalGraphSettingsContext.Provider
           value={{
             settings: globalSettings,
             updateSettings: setGlobalSettings,
           }}
 				>
-					<Modal show={modalOpen} onHide={() => setModalOpen(false)}>
-						<Modal.Header closeButton>
-          		<Modal.Title>Analyze text</Modal.Title>
-       		 	</Modal.Header>
-						<Modal.Body>
-							<TextProvider/>
-  					</Modal.Body>
-      		</Modal>
-          <div className='flex justify-center justify-items-center'>
-            <div className='p-4 flex-none flex-row justify-center items-center justify-items-center w-3/4 m-0'>
-              {/* <img src={logo} className='App-logo' alt='logo' />
-                <p>
-                  Edit <code>src/App.tsx</code> and save to reload.
-                </p> */}
-              <div className='flex self-center'>
-                <BaseButton
-                  text={'Input text'}
-                  onClick={() => setModalOpen(true)}
-                />
-                <BaseButton
-                  text={'Load text'}
-                  onClick={() => console.log('Load text')}
-                />
-                <BaseButton
-                  text={'Save graph'}
-                  onClick={() => console.log('Save graph')}
-                />
-              </div>
-              <div className='flex self-center'>
-                <InputComponent
-                  inputState={readText}
-                  setInputState={setReadText}
-                />
-              </div>
-              <div className='flex self-center'>
-                <Graph
-                  key={uuid()} //TODO: change in different palce
-                  graph={filteredGraph}
-                  options={options}
-                  events={events}
-                  getNetwork={(network: any) => {
-                    console.log(network);
-                    //  if you want access to vis.js network api you can set the state in a parent component using this property
-                  }}
-                />
-              </div>
-            </div>
-            <div className='p-4'>
-              <RightTab />
-            </div>
-          </div>
+					<AppStateContext.Provider value={{
+						state: appState,
+						updateState: setAppState,
+					}}>
+						<SelectedNodeContext.Provider value={{
+							nodeId: selectedNode,
+							updateNodeId: setSelectedNode,
+						}}>
+							<Modal show={modalOpen} onHide={() => setModalOpen(false)}>
+								<Modal.Header closeButton>
+          				<Modal.Title>Analyze text</Modal.Title>
+       				 	</Modal.Header>
+								<Modal.Body>
+									<TextProvider/>
+  							</Modal.Body>
+      				</Modal>
+          		<div className='flex justify-center justify-items-center'>
+          		  <div className='p-4 flex-none flex-row justify-center items-center justify-items-center w-3/4 m-0'>
+          		    {/* <img src={logo} className='App-logo' alt='logo' />
+          		      <p>
+          		        Edit <code>src/App.tsx</code> and save to reload.
+          		      </p> */}
+          		    <div className='flex self-center'>
+          		      <BaseButton
+          		        text={'Input text'}
+          		        onClick={() => setModalOpen(true)}
+          		      />
+          		    </div>
+          		    <div className='flex self-center'>
+          		    </div>
+          		    <div className='flex self-center'>
+          		      <Graph
+          		        key={graphId} //TODO: change in different palce
+          		        graph={filteredGraph}
+          		        options={options}
+          		        events={events}
+          		        getNetwork={(network: any) => {
+          		          console.log(network);
+          		          //  if you want access to vis.js network api you can set the state in a parent component using this property
+          		        }}
+          		      />
+          		    </div>
+          		  </div>
+          		  <div className='p-4'>
+          		    <RightTab />
+          		  </div>
+          		</div>
+						</SelectedNodeContext.Provider>
+					</AppStateContext.Provider>
         </GlobalGraphSettingsContext.Provider>
-      </GraphContext.Provider>
     </GraphRefresherContext.Provider>
   );
 }

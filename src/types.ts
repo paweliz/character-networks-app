@@ -16,3 +16,12 @@ export type GlobalGraphSettings = {
   minCountThreshold: number;
   maxCountThreshold: number;
 };
+
+export enum AppMode {
+  normal,
+  merge,
+};
+
+export type AppState = {
+  mode: AppMode;
+}
