@@ -11,7 +11,7 @@ const ContentTab: FunctionComponent<ContentTabProps> = (props) => {
 
 
   return (
-    <div className="h-full p-4 border-4 border-indigo-500 rounded-md">
+    <div className="flex flex-col basis-0 grow p-4 border-4 border-indigo-500 rounded-md">
       {
         props.tabType === TabsTypes.general && <GeneralContentTab/>
       }

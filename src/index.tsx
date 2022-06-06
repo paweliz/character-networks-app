@@ -7,9 +7,9 @@ import reportWebVitals from './reportWebVitals';
 import MainRouting from './MainRouting';
 
 ReactDOM.render(
-  <React.StrictMode>
+
     <MainRouting/>
-  </React.StrictMode>,
+,
   document.getElementById('root')
 );
 

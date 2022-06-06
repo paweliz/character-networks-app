@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import './GraphApp.css';
-import Graph from 'react-graph-vis';
+import Graph, { Network } from 'react-graph-vis';
 import InputComponent from './components/InputComponent';
 import BaseButton from './components/BaseButton';
 import RightTab from './components/RightTab';
-import { AppMode, AppState, GlobalGraphSettings, GraphType } from './types';
+import { AppMode, AppState, GlobalGraphSettings, GraphType, NodeTypesColors } from './types';
 import { GraphContext } from './contexts/GraphContext';
 import { GlobalGraphSettingsContext } from './contexts/SettingsContext';
 import { v4 as uuid } from 'uuid';
@@ -320,7 +320,8 @@ function GraphApp() {
   });
 
 	const [appState, setAppState] = useState<AppState>({mode: AppMode.normal});
-	const [selectedNode, setSelectedNode] = useState<string | null>(null);
+	const [selectedNode, setSelectedNode] = useState<{value: string} | null>(null);
+	const [graphNetwork, setGraphNetwork] = useState<Network | null>(null);
 
 	const [modalOpen, setModalOpen] = useState<boolean>(false);
 
@@ -330,18 +331,52 @@ function GraphApp() {
     layout: {
       hierarchical: false,
     },
+		nodes: {
+			color: '#ff6696',
+		},
     edges: {
       color: '#000000',
+			arrows: {
+				to: {
+					enabled: false,
+				}
+			},
     },
     height: '500px',
   };
 
   const events = {
 		select: ({nodes}: any) => {
-			if (nodes.length > 0)
-				setSelectedNode(nodes[0]);
-			else
-				setSelectedNode(null);
+			if (appState.mode === AppMode.normal) {
+				if (nodes.length > 0)
+					setSelectedNode({value: nodes[0]});
+				else
+					setSelectedNode(null);
+			}
+			if (appState.mode === AppMode.merge) {
+				fetch(`http://${process.env.REACT_APP_BACKEND_ADDRESS}:${process.env.REACT_APP_BACKEND_PORT}/graph/${id}/nodes/merge`, {
+    		  method: 'PUT',
+      		headers: { 'Content-Type': 'application/json' },
+      		body: JSON.stringify({
+						first: selectedNode.value as unknown as number,
+						second: nodes[0] as unknown as number,
+        	}),
+      	})
+    		.then(response => response.json())
+    		.then(data => {
+					refresh();
+					
+    		}).catch(e => {
+					alert("Error occurred during node merge.");
+    		}).finally(() => {
+				
+    		});
+				setAppState({
+					...appState,
+					mode: AppMode.normal,
+				});
+			}
+			
 		}
 	};
 
@@ -358,11 +393,17 @@ function GraphApp() {
     .then(response => response.json())
     .then(data => {
       if (data) {
+				type colorVals = keyof typeof NodeTypesColors;
         const readable = {
           ...data,
+					nodes: data.nodes.map((n: any) => ({
+						...n,
+						color: NodeTypesColors[n.title as colorVals],
+					})),
           edges: data.edges.map((e: edgesFromJSON) => ({
             from: e.fromNode,
             to: e.toNode,
+						
           })),
         }
         setFilteredGraph(readable);
@@ -385,6 +426,14 @@ function GraphApp() {
     });*/
     setGraphId(uuid());
   }, [globalSettings, refreshValue]);
+
+	useEffect(() => {
+		if (!graphNetwork) return;
+
+		const doSelect = selectedNode && filteredGraph.nodes.filter((v) => v.id === (selectedNode.value as unknown as number)).length !== 0;
+
+		graphNetwork.setSelection({nodes: doSelect ? [selectedNode.value] : [], edges: []}, {unselectAll: true})
+	}, [selectedNode, filteredGraph]);
 
 
   return (
@@ -411,7 +460,7 @@ function GraphApp() {
 									<TextProvider/>
   							</Modal.Body>
       				</Modal>
-          		<div className='flex justify-center justify-items-center'>
+          		<div className='flex justify-center justify-items-center h-full'>
           		  <div className='p-4 flex-none flex-row justify-center items-center justify-items-center w-3/4 m-0'>
           		    {/* <img src={logo} className='App-logo' alt='logo' />
           		      <p>
@@ -429,16 +478,17 @@ function GraphApp() {
           		      <Graph
           		        key={graphId} //TODO: change in different palce
           		        graph={filteredGraph}
+
           		        options={options}
           		        events={events}
           		        getNetwork={(network: any) => {
-          		          console.log(network);
+          		          setGraphNetwork(network);
           		          //  if you want access to vis.js network api you can set the state in a parent component using this property
           		        }}
           		      />
           		    </div>
           		  </div>
-          		  <div className='p-4'>
+          		  <div className='p-4 flex flex-col'>
           		    <RightTab />
           		  </div>
           		</div>

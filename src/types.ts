@@ -25,3 +25,9 @@ export enum AppMode {
 export type AppState = {
   mode: AppMode;
 }
+
+export enum NodeTypesColors {
+  nam_liv = '#36b2d1',
+  nam_loc = '#10c744', 
+  nam_fac = '#ba933f',
+}

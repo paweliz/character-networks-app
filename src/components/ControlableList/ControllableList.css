@@ -1,0 +1,27 @@
+.list > .element:first-child{
+  @apply rounded-tl-md;
+}
+
+.list > .element:last-child{
+  @apply rounded-bl-md;
+}
+
+.element {
+  cursor: pointer;
+}
+
+.element:hover{
+  @apply bg-indigo-100 border border-indigo-400;
+}
+
+.element + .element:hover {
+  @apply border border-indigo-400;
+}
+
+.element:focus {
+  @apply bg-indigo-200 border border-indigo-400 shadow shadow-lg shadow-indigo-900;
+}
+.element:active {
+  @apply bg-indigo-200 border border-indigo-400 shadow shadow-lg shadow-indigo-900;
+}
+
