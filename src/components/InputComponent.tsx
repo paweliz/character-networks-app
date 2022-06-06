@@ -1,14 +1,16 @@
 import { FunctionComponent } from 'react';
 
 interface InputComponentProps {
-  inputState: string | ArrayBuffer | null;
-  setInputState: (value: string | ArrayBuffer | null) => void;
+  inputState: File;
+  setInputState: (value: File) => void;
 }
 
 const InputComponent: FunctionComponent<InputComponentProps> = ({
   setInputState,
 }) => {
   let fileReader: FileReader;
+  fileReader = new FileReader();
+  // let formData = new FormData();
 
   //   const handleFileRead = (e) => {
   //     const content = fileReader;
@@ -20,6 +22,8 @@ const InputComponent: FunctionComponent<InputComponentProps> = ({
   const handleFileChosen = (file: File) => {
     fileReader = new FileReader();
     console.log(file, fileReader);
+    // formData.append('file', file);
+    setInputState(file);
     //fileReader.onloadend = handleFileRead;
     //fileReader.readAsText(file);
   };
@@ -34,7 +38,7 @@ const InputComponent: FunctionComponent<InputComponentProps> = ({
         file:text-sm file:font-semibold
         file:bg-violet-50 file:text-violet-700
         hover:file:bg-violet-100'
-        accept='.txt'
+        accept='.txt,.pdf'
         onChange={(e) => handleFileChosen(e.target.files[0])}
       />
     </div>
