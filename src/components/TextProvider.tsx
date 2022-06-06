@@ -33,10 +33,9 @@ const TextProvider: FunctionComponent<TextProviderProps> = () => {
           method: 'POST',
           // mode: 'cors',
           // headers: { 'Content-Type': 'multipart/form-data' },
-          body: {
+          body: JSON.stringify({
             email: email,
-            file: JSON.parse(readText),
-          },
+          }),
         }).then((response) => console.log(response));
       } catch (e) {
         console.log(e);
@@ -82,7 +81,6 @@ const TextProvider: FunctionComponent<TextProviderProps> = () => {
           ) : (
             <BaseTextInput
               type='textarea'
-              value={readText}
               onChange={(e) => setReadText(e.target.value)}
             />
           )}
